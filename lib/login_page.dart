@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -27,16 +28,19 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       print('Login Response: $jsonResponse'); // Debugging output
-      final visitId = jsonResponse['userlogin']['visit_id'];
-      print(
-          'visit_id type: ${visitId.runtimeType}');
-      print('visit_id: $visitId'); // Debugging output
-      if (visitId != null) {
-        _navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (context) => PatientDetailsPage(visitId: visitId['userlogin']['visit_id']),
-        ));
-      } else {
-        _showSnackBar('Failed to retrieve visit ID');
+      final userlogin = jsonResponse['userlogin'];
+      if (userlogin is List && userlogin.isNotEmpty) {
+        final visitId = userlogin[0]['visit_id'];
+        print('visit_id type: ${visitId.runtimeType}');
+        print('visit_id: $visitId'); // Debugging output
+
+        if (visitId != null) {
+          _navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+            builder: (context) => PatientDetailsPage(visitId: visitId,),
+          ));
+        }else if (response.statusCode == 404) {
+         _showSnackBar('Login Failed');
+        }
       }
     }
   }
